@@ -1,0 +1,42 @@
+<?php
+
+// Connect to the database
+$db = new PDO('mysql:host=localhost;dbname=mydatabase', 'username', 'password');
+
+// Prepare the SQL statement to select the category_product and their associated products
+$sql = "SELECT c.id AS category_id, c.name AS category_name, p.id AS product_id, p.name AS product_name
+        FROM category_product c
+        LEFT JOIN products p ON p.category_id = c.id
+        ORDER BY c.name, p.name";
+
+// Execute the SQL statement and fetch the results
+$stmt = $db->prepare($sql);
+$stmt->execute();
+$result = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Loop through the result set and build an array of category_product with their associated products
+$category_product = array();
+foreach ($result as $row) {
+  $category_id = $row['category_id'];
+  $category_name = $row['category_name'];
+  $product_id = $row['product_id'];
+  $product_name = $row['product_name'];
+  
+  if (!isset($category_product[$category_id])) {
+    $category_product[$category_id] = array(
+      'id' => $category_id,
+      'name' => $category_name,
+      'products' => array()
+    );
+  }
+  
+  if ($product_id) {
+    $category_product[$category_id]['products'][] = array(
+      'id' => $product_id,
+      'name' => $product_name
+    );
+  }
+}
+
+// Return the array of category_product and their associated products
+return $category_product;
